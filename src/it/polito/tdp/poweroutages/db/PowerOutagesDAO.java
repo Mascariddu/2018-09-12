@@ -4,6 +4,9 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
+import com.mysql.cj.exceptions.RSAException;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -11,8 +14,34 @@ import java.sql.SQLException;
 
 import it.polito.tdp.poweroutages.model.Nerc;
 import it.polito.tdp.poweroutages.model.NercIdMap;
+import it.polito.tdp.poweroutages.model.Poweroutages;
 
 public class PowerOutagesDAO {
+	
+	public List<Poweroutages> LoadAllPowerOutages(NercIdMap idMap) {
+		
+		String sql = "SELECT id, nerc_id,date_event_began,date_event_finished FROM poweroutages";
+		List<Poweroutages> pOList = new ArrayList<>();
+
+		try {
+			Connection conn = ConnectDB.getConnection();
+			PreparedStatement st = conn.prepareStatement(sql);
+			ResultSet res = st.executeQuery();
+
+			while (res.next()) {
+				Poweroutages poweroutages = new Poweroutages(res.getInt("id"),idMap.get("nerc_id"),res.getTimestamp("date_event_began").toLocalDateTime(),res.getTimestamp("date_event_finished").toLocalDateTime());
+				pOList.add(poweroutages);
+			}
+
+			conn.close();
+			
+		} catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
+		
+		return pOList;
+
+	}
 	
 	public List<Nerc> loadAllNercs(NercIdMap nIdMap) {
 
